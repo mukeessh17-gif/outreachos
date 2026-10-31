@@ -1,0 +1,12 @@
+# Secrets - never commit API keys or other private values
+.env
+
+# Virtual environment - do not commit installed packages
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Data files that may contain personal or customer information
+week1/leads.json
