@@ -222,15 +222,20 @@ Fast (async + gather) | 10   | 0         | 0.45
 Speedup: 4.7x faster with async.
 
 ============================== test session starts ==============================
-collected 10 items
+collected 30 items
 week3/tests/test_leads_logic.py::test_is_good_lead[4-False] PASSED
 week3/tests/test_leads_logic::test_is_good_lead[5-True] PASSED
 ...
-============================== 10 passed in 0.12s ===============================
+======================== 30 passed, 1 warning in 1.98s ========================
 
 INFO 2024-01-01 10:00:00 | INFO     | req=a1b2c3d4 | GET /health -> 200 (5ms)
 INFO 2024-01-01 10:00:01 | INFO     | req=e5f6g7h8 | GET /leads -> 200 (12ms)
 ```
+
+The Week 3 API tests use a mocked database, so they do not need a Supabase
+connection. To verify `/leads` against your database manually, configure
+`DATABASE_URL`, start the API, and call the endpoint. `/health` only confirms
+that the API process is running.
 
 ## Safety (all weeks)
 

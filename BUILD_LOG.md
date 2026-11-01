@@ -327,3 +327,24 @@
 
 **Tomorrow:**
 - Week 3 Checkpoint: run all tests, start server, verify endpoints, commit one per day
+
+## Week 3 Checkpoint: Verification
+
+**What I verified:**
+- Ran `.\.venv\Scripts\python.exe -m pytest -v` from the repository root.
+- Result: `30 passed, 1 warning in 1.98s`.
+- API tests cover `/health` and `/leads` through FastAPI's TestClient with a mocked database; the suite makes no real Supabase or external HTTP calls.
+- Confirmed `.env` and `.venv` are ignored by `.gitignore`.
+
+**Warnings:**
+- pytest-asyncio warns that the default fixture loop scope is not configured.
+- Starlette warns that its TestClient integration with `httpx` is deprecated.
+- Neither warning caused a test failure.
+
+**Manual check (requires a configured `DATABASE_URL`):**
+1. Run `uvicorn week3.app.main:app --reload`.
+2. In another PowerShell window, run `Invoke-RestMethod -Uri http://localhost:8000/health` and confirm `status` is `ok`.
+3. Run `Invoke-RestMethod -Uri http://localhost:8000/leads` and confirm it returns a JSON list from the configured database.
+4. Stop the server with Ctrl+C.
+
+**Before committing:** run `git status --short --untracked-files=all` and confirm `.env` and `.venv` are not listed. This workspace already contains unrelated, uncommitted Week 4 work; stage only the intended files.
