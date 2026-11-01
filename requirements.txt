@@ -2,4 +2,9 @@ requests
 google-genai
 python-dotenv
 sqlalchemy
-psycopg
+psycopg2-binary
+httpx
+pytest
+pytest-asyncio
+fastapi
+uvicorn[standard]

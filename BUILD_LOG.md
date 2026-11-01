@@ -220,3 +220,110 @@
 
 **Tomorrow:**
 - Final verification: git status (no .env, no .venv), search for password, 5 whole-week questions, one commit per day
+
+## Week 3 Day 1: async / await
+
+**What I built:**
+- week3/day1_async.py with restaurant analogy explanation (6 lines)
+- Slow sequential fetch of 10 URLs from jsonplaceholder.typicode.com
+- Fast concurrent fetch with asyncio.gather and httpx.AsyncClient
+- asyncio.Semaphore(5) to limit concurrency (free API rate limiting)
+- Per-request httpx.HTTPError handling; reports succeeded/failed counts
+- Prints both times side by side with speedup factor
+
+**What broke:**
+- (fill in any errors you hit while running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned about async/await)
+
+**Tomorrow:**
+- Build Week 3 Day 2: pure logic functions + pytest
+
+## Week 3 Day 2: Testing with pytest
+
+**What I built:**
+- week3/leads_logic.py with is_good_lead(), score_lead(), clean_company_name() (type hints, pure functions)
+- week3/tests/test_leads_logic.py with parametrized tests, boundaries (4, 5, 20, 21), empty strings, extra spaces
+- week3/tests/test_async_mock.py with mocked httpx (no real network calls)
+- week3/tests/test_retry.py for retry_with_backoff (succeeds after retries, gives up, non-matching exception)
+
+**What broke:**
+- (fill in any errors you hit while running pytest)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned about pytest)
+
+**Tomorrow:**
+- Build Week 3 Day 3: FastAPI basics
+
+## Week 3 Day 3: FastAPI basics
+
+**What I built:**
+- week3/app/main.py with FastAPI app, GET /health, GET /leads, GET /leads/{lead_id}, GET /leads/good
+- CORS allowing only http://localhost:3000
+- Route ordering comment: /leads/good before /leads/{lead_id}
+- Parameterized SQL queries only (:name style)
+- week3/app/schemas.py not yet created (Day 4)
+
+**What broke:**
+- (fill in any errors you hit while running uvicorn)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned about FastAPI)
+
+**Tomorrow:**
+- Build Week 3 Day 4: POST endpoints + Pydantic
+
+## Week 3 Day 4: POST endpoints and Pydantic
+
+**What I built:**
+- week3/app/schemas.py with LeadCreate and LeadOut Pydantic models
+- POST /leads with validation, ON CONFLICT DO NOTHING, 201 or 409
+- PATCH /leads/{lead_id} for partial updates
+- DELETE /leads/{lead_id} returning 204 or 404
+- GET /leads with limit/offset/search query parameters
+- GET /leads/good sorted by score
+- 422 validation error explanation (5 lines)
+
+**What broke:**
+- (fill in any errors you hit)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned about Pydantic and FastAPI validation)
+
+**Tomorrow:**
+- Build Week 3 Day 5: logging, retries, API tests
+
+## Week 3 Day 5: Logging, retries, and API tests
+
+**What I built:**
+- week3/app/logging_config.py with console + rotating file handler, request id, timestamp, level
+- week3/app/retry.py with retry_with_backoff decorator (exponential backoff + jitter)
+- week3/app/main.py updated with request-logging middleware, global exception handler (clean 500 JSON)
+- week3/tests/test_api.py with TestClient tests for all endpoints (mocked database, no real data)
+- logs/ added to .gitignore
+
+**What broke:**
+- (fill in any errors you hit)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned about logging and testing)
+
+**Tomorrow:**
+- Week 3 Checkpoint: run all tests, start server, verify endpoints, commit one per day

@@ -133,8 +133,108 @@ Choose an option: 5
 Goodbye!
 ```
 
+- Never paste real customer data into a free-tier LLM key or a free database.
+
+## Week 3: Async, Testing, FastAPI
+
+Week 3 adds async HTTP fetching, pytest testing, and a FastAPI REST API on top of the Postgres database.
+
+### What it does
+
+- Fetches URLs sequentially vs concurrently with async/await (Day 1)
+- Pure lead logic functions with pytest unit tests (Day 2)
+- FastAPI app with GET /leads, GET /leads/{id}, GET /leads/good (Day 3)
+- POST /leads, PATCH /leads/{id}, DELETE /leads/{id} with Pydantic validation (Day 4)
+- Logging with request IDs, retry with backoff, global exception handler, API tests with TestClient (Day 5)
+
+### How to install (Week 3)
+
+1. Install new dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+2. Make sure `DATABASE_URL` is in your `.env` (from Week 2 Supabase setup).
+3. Create the `logs/` folder (it is in `.gitignore`):
+   ```
+   mkdir week3\logs
+   ```
+
+### How to run (Week 3)
+
+From the repo root (`outreachos>` prompt):
+
+- Run the async demo:
+  ```
+  python week3\day1_async.py
+  ```
+- Run the tests:
+  ```
+  pytest -v
+  ```
+- Start the FastAPI server:
+  ```
+  uvicorn week3.app.main:app --reload
+  ```
+- Open the interactive docs: http://localhost:8000/docs
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check, returns `{"status": "ok"}` |
+| GET | `/leads` | List all companies (query: `limit`, `offset`, `search`) |
+| GET | `/leads/good` | Leads with 5-20 employees + website, sorted by score |
+| GET | `/leads/{lead_id}` | One company by id (404 if not found) |
+| POST | `/leads` | Create a company (201 created, 409 if duplicate) |
+| PATCH | `/leads/{lead_id}` | Update employees and/or has_website |
+| DELETE | `/leads/{lead_id}` | Delete a company (204 no content, 404 if not found) |
+
+### Example curl commands (PowerShell)
+
+```powershell
+# Health check
+Invoke-RestMethod -Uri http://localhost:8000/health
+
+# List all leads
+Invoke-RestMethod -Uri http://localhost:8000/leads
+
+# Get one lead
+Invoke-RestMethod -Uri http://localhost:8000/leads/1
+
+# Create a lead (PowerShell)
+$body = @{ name = "Test Co"; city = "Coimbatore"; employees = 10; hasWebsite = $true } | ConvertTo-Json
+Invoke-RestMethod -Uri http://localhost:8000/leads -Method Post -Body $body -ContentType "application/json"
+
+# Delete a lead
+Invoke-RestMethod -Uri http://localhost:8000/leads/1 -Method Delete
+```
+
+### Example output
+
+```
+Fetching 10 URLs from jsonplaceholder.typicode.com ...
+
+Version           | Succeeded   | Failed    | Time (s)
+-----------------------------------------------
+Slow (sequential) | 10          | 0         | 2.10
+Fast (async + gather) | 10   | 0         | 0.45
+
+Speedup: 4.7x faster with async.
+
+============================== test session starts ==============================
+collected 10 items
+week3/tests/test_leads_logic.py::test_is_good_lead[4-False] PASSED
+week3/tests/test_leads_logic::test_is_good_lead[5-True] PASSED
+...
+============================== 10 passed in 0.12s ===============================
+
+INFO 2024-01-01 10:00:00 | INFO     | req=a1b2c3d4 | GET /health -> 200 (5ms)
+INFO 2024-01-01 10:00:01 | INFO     | req=e5f6g7h8 | GET /leads -> 200 (12ms)
+```
+
 ## Safety (all weeks)
 
 - `.env` contains your API key and database URL. Both are in `.gitignore`. Never commit them.
 - `.venv/` is also in `.gitignore`. It can be rebuilt from `requirements.txt`.
 - Never paste real customer data into a free-tier LLM key or a free database.
+- The free Gemini tier may use your inputs for Google's products — use only fake or public company data.

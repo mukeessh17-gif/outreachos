@@ -10,3 +10,6 @@ __pycache__/
 
 # Data files that may contain personal or customer information
 week1/leads.json
+
+# Logs
+week3/logs/
