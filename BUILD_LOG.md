@@ -94,3 +94,129 @@
 
 **Tomorrow:**
 - Final verification: run all days, answer 5-week quiz, commit one commit per day
+
+## Week 2 Day 1: Supabase and First SQL
+
+**What I built:**
+- week2/sql/day1.sql with CREATE TABLE companies, INSERT 5 Coimbatore rows, SELECT *, SELECT WHERE, SELECT ORDER BY
+- Plain-English explanations of database, table/row/column, Postgres, and why databases beat JSON files
+- Primary keys and data types explained in 5 lines
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned today about SQL and Supabase)
+
+**Tomorrow:**
+- Build Week 2 Day 2: UPDATE, DELETE, JOIN
+
+## Week 2 Day 2: UPDATE, DELETE, JOIN
+
+**What I built:**
+- week2/sql/day2.sql with UPDATE/DELETE with WHERE warnings, BEGIN...ROLLBACK example
+- contacts table with FOREIGN KEY to companies, 8 fake contacts (@example.com only)
+- INNER JOIN and LEFT JOIN examples with text drawing
+- Practice queries: GROUP BY count, companies with no contacts, employees 5-20
+- TODO skeleton for website + 5-20 employees query
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned today about JOINs and transactions)
+
+**Tomorrow:**
+- Build Week 2 Day 3: schema design
+
+## Week 2 Day 3: Design the Schema
+
+**What I built:**
+- week2/sql/schema.sql with companies, contacts, lead_research tables
+- UNIQUE constraint on companies.name (added for ON CONFLICT support in Day 5)
+- UNIQUE (company_id, email) on contacts, indexes on company_id columns
+- week2/schema.md with Mermaid ER diagram and rebuild instructions
+- Drop-and-recreate script with loud dev-only warning
+- TODO skeleton for status column with CHECK constraint
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned today about normalization and schema design)
+
+**Tomorrow:**
+- Build Week 2 Day 4: connect Python to Postgres
+
+## Week 2 Day 4: Connect Python to Postgres
+
+**What I built:**
+- week2/db.py as the ONLY file that opens database connections, exposes get_engine()
+- week2/day4.py with SQLAlchemy Core, text(), parameterized queries (:name style)
+- SQL injection explanation in 5 lines
+- Connect, print Postgres version, SELECT all companies, INSERT with parameters, commit
+- try/except for connection errors with friendly message (never shows password)
+- requirements.txt updated with sqlalchemy, psycopg
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned today about SQLAlchemy and connection strings)
+
+**Tomorrow:**
+- Build Week 2 Day 5: save real leads
+
+## Week 2 Day 5: Save Real Leads
+
+**What I built:**
+- week2/day5.py with save_company() using ON CONFLICT (name) DO NOTHING
+- import_leads() with batch insert in one transaction, one commit
+- fetch_fake_leads() from jsonplaceholder.typicode.com (free, no key)
+- logging module (not print) tracking inserted/skipped/failed
+- try/except with friendly error message, never shows password
+- TODO skeleton for save_ai_summaries() using week1/llm.py
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned today about batch inserts and logging)
+
+**Tomorrow:**
+- Build Week 2 Checkpoint: leads_cli.py
+
+## Week 2 Checkpoint: CLI Tool
+
+**What I built:**
+- week2/leads_cli.py with TODO skeleton for menu loop
+- SQL helper functions for list, search, add, JOIN
+- README section on rebuilding database from schema.sql
+- Test: 50 companies saved, JOIN queried, no duplicates after double import
+
+**What broke:**
+- (fill in any errors you hit while typing or running the code)
+
+**How I fixed it:**
+- (fill in how you resolved each error)
+
+**What I learned:**
+- (fill in what you learned from building the full CLI tool)
+
+**Tomorrow:**
+- Final verification: git status (no .env, no .venv), search for password, 5 whole-week questions, one commit per day
