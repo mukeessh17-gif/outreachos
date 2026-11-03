@@ -1,0 +1,45 @@
+{
+  "created_at": "2026-11-03T17:26:31.677322+00:00",
+  "mode": "offline-deterministic",
+  "golden_leads": 30,
+  "rubric": {
+    "personalization": "5 only when both company and brief pain point are mentioned.",
+    "faithfulness": "5 when the evidence guard accepts every email.",
+    "no_invented_facts": "5 when evidence checks pass and no unsupported quantitative claim appears.",
+    "length": "5 when each body is 12-180 words and <= 1,200 characters."
+  },
+  "scores_out_of_5": {
+    "v1": {
+      "personalization": 1.0,
+      "faithfulness": 5.0,
+      "no_invented_facts": 5.0,
+      "length": 5.0
+    },
+    "v2": {
+      "personalization": 5.0,
+      "faithfulness": 5.0,
+      "no_invented_facts": 5.0,
+      "length": 5.0
+    }
+  },
+  "overall_average_out_of_5": {
+    "v1": 4.0,
+    "v2": 5.0
+  },
+  "winner": "v2",
+  "weakest_case_improved_once": {
+    "lead_id": 1,
+    "before": {
+      "personalization": 1,
+      "faithfulness": 5,
+      "no_invented_facts": 5,
+      "length": 5
+    },
+    "after": {
+      "personalization": 5,
+      "faithfulness": 5,
+      "no_invented_facts": 5,
+      "length": 5
+    }
+  }
+}

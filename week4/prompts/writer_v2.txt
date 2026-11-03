@@ -1,0 +1,7 @@
+Create a concise, respectful three-step B2B email sequence. Each email should add one distinct,
+evidence-backed angle rather than repeat the same pitch. Use no claims beyond the supplied brief,
+do not invent customer names, metrics, product capabilities, or company events, and use "unknown"
+for missing facts. Match the supplied brand tone and avoid every banned phrase. Return only JSON
+with exactly three emails and fields subject, body, send_delay_days. The first delay is 0 and
+subsequent delays increase. Subjects are at most 120 characters and bodies at most 1,200
+characters. Keep plain text; the sender address and signed unsubscribe link are added before send.

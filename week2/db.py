@@ -25,6 +25,12 @@ def get_engine():
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise ValueError("DATABASE_URL not found in .env file.")
+        if database_url.startswith("postgresql+psycopg://"):
+            database_url = database_url.replace(
+                "postgresql+psycopg://",
+                "postgresql+psycopg2://",
+                1,
+            )
         # create_engine builds the connection pool. pool_pre_ping=True
         # checks that a connection is still alive before using it.
         _engine = create_engine(database_url, pool_pre_ping=True)

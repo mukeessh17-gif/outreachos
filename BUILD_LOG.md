@@ -348,3 +348,50 @@
 4. Stop the server with Ctrl+C.
 
 **Before committing:** run `git status --short --untracked-files=all` and confirm `.env` and `.venv` are not listed. This workspace already contains unrelated, uncommitted Week 4 work; stage only the intended files.
+
+## Weeks 4-16: Multi-tenant application through launch preparation
+
+**What I built:**
+- Week 4-5: Argon2/JWT authentication, organization membership, tenant-scoped API and tests, Alembic migration, Next.js/TypeScript/Tailwind UI, server-side API proxy with httpOnly cookie, lead search/CSV preview, settings and CORS.
+- Week 6-8: polite public-business-site research with robots.txt and content limits, Pydantic research and email schemas, token budgets, draft approval, 30 fictional-lead email prompt evaluations and versioned reports.
+- Week 9-12: Postgres job queue and worker, retries/dead jobs, Gmail OAuth token encryption, dry-run outbox/scheduler, unsubscribe and suppression handling, reply sync/classification, calendar free/busy, pipeline, analytics and prompt A/B routes.
+- Week 13-14: Postgres RLS policies, Stripe test-mode checkout/webhook verification, plan limits, Sentry event sanitization, data export/deletion routes, privacy and unsubscribe UI, and a security checklist.
+- Week 15-16: backend/frontend Dockerfiles and Compose, GitHub Actions, backup/restore script, fictional seed data, Locust workload, demo and beta templates, and a case-study draft. The local Compose configuration/build was not validated because Docker is not installed in this environment.
+
+**Verification on 2026-11-02:**
+- `.\.venv\Scripts\python.exe -m pytest -v`: **65 passed** (11 warnings; no failures).
+- `npm --prefix frontend run typecheck` and `npm --prefix frontend run build`: passed.
+- `npm --prefix frontend audit --audit-level=moderate`: zero reported vulnerabilities.
+- `.\.venv\Scripts\python.exe -m pip_audit`: no known vulnerabilities found; the tool emitted cache deserialization warnings but exited successfully.
+- `.\.venv\Scripts\python.exe -m alembic -c alembic.ini history`: revision chain is `0001 -> 0002 -> 0003`. No migration was applied to the configured database.
+- Email prompt evaluation: v2 won, 5.0/5 vs v1 at 4.0/5 across 30 fictional leads; weakest case improved from 4/5 to 5/5.
+- Reply evaluation: 96/100 synthetic replies correctly classified (96%); all four errors were expected `interested` labeled `other`.
+- Locust: isolated SQLite API, 20 users for 30 seconds; 1,768 requests, 0 failures, 60.21 requests/s, mean 9 ms, p95 22 ms, p99 46 ms, max 92 ms. This is a local smoke/load check, not hosted capacity evidence.
+- `git check-ignore .env .venv` confirmed both local-only paths are ignored.
+
+**Warnings and remaining manual work:**
+- No Docker executable was available, so Compose validation and container builds were not run.
+- No PostgreSQL migration, live RLS validation, Gmail send, Calendar call, Stripe live operation, Sentry account, or production hosting deployment was performed.
+- Keep email dry-run enabled and use only fake/public business data. Free Gemini inputs may be used for Google's product improvement and may be human-reviewed.
+- Consult [SECURITY.md](./SECURITY.md) for the automated evidence and manual release checklist; see [DECISIONS.md](./DECISIONS.md) for current free-tier caveats and hosting decisions.
+
+**Exact verification commands:**
+```powershell
+.\.venv\Scripts\python.exe -m pytest -v
+npm --prefix frontend run typecheck
+npm --prefix frontend run build
+npm --prefix frontend audit --audit-level=moderate
+.\.venv\Scripts\python.exe -m pip_audit
+.\.venv\Scripts\python.exe -m alembic -c alembic.ini history
+.\.venv\Scripts\python.exe -m week4.evals.run
+.\.venv\Scripts\python.exe -m week4.evals.reply_eval
+```
+
+**Manual checklist:** verify local signup/login and cookie behavior; use a backed-up disposable PostgreSQL instance to apply and inspect RLS migrations; confirm `SEND_MODE=dry-run`; verify only fictional demo rows; review Gmail Testing-mode setup and Stripe test keys; test backup/restore on disposable Postgres; and confirm `git status --short --untracked-files=all` does not list `.env` or `.venv`.
+
+**Git commands (not run):**
+```powershell
+git status --short --untracked-files=all
+git add <reviewed-files-only>
+git commit -m "Complete OutreachOS Weeks 4-16"
+```

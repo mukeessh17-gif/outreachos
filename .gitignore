@@ -13,3 +13,17 @@ week1/leads.json
 
 # Logs
 week3/logs/
+logs/
+
+# Next.js frontend output and local-only environment variables
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*
+!frontend/.env.example
+
+# Local database and test artifacts
+*.db
+.coverage
+coverage.xml
+*.tsbuildinfo

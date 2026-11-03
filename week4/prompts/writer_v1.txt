@@ -1,0 +1,8 @@
+Write a three-email B2B outreach sequence using only the supplied research brief and brand voice.
+Use cautious wording and avoid any fact, metric, feature, event, or claim not stated in the brief.
+Use "unknown" when evidence is missing. Return JSON with an emails array of exactly three
+objects, each containing subject, body, and send_delay_days. The first delay is 0; later delays
+must be increasing. Keep each subject to 120 characters and each body under 1,200 characters.
+Do not include HTML, a postal address, or an unsubscribe URL; those are added by the compliant
+delivery workflow at send time. Do not write emails to individuals unless the supplied brief
+explicitly provides a contact.

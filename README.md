@@ -1,5 +1,81 @@
 # OutreachOS
 
+## Current application (Weeks 4-16)
+
+The authenticated application is `week4.main:app`; `week3.app.main:app` remains the original Week 3 demo and is unauthenticated. Use the Week 4+ app for normal development.
+
+### Local setup
+
+1. Use Python 3.13 and Node.js 24. From PowerShell in the repository root:
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install -r requirements-dev.txt
+   Copy-Item .env.example .env
+   ```
+2. Edit `.env` locally. Set a PostgreSQL `DATABASE_URL`, a random `JWT_SECRET` of at least 32 characters, and a valid `FERNET_KEY`. Keep `SEND_MODE=dry-run`; leave Stripe keys in test mode. Never print or share `.env`.
+   Generate local-only keys if needed:
+   ```powershell
+   python -c "import secrets; print(secrets.token_urlsafe(48))"
+   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   ```
+   Copy each generated value directly into your local `.env`, not into chat or source control. The Gemini key is optional until you run an AI workflow; create it without linking billing.
+3. Back up the development database before applying the irreversible tenant migration:
+   ```powershell
+   python -m alembic -c alembic.ini upgrade head
+   ```
+   The migration preserves existing Week 2 company data under a `Migrated Leads` organization. Do not first run it against a production or irreplaceable database.
+4. Start the API and frontend in separate PowerShell windows:
+   ```powershell
+   .\.venv\Scripts\Activate.ps1
+   python -m uvicorn week4.main:app --reload
+   ```
+   ```powershell
+   npm --prefix frontend ci
+   npm --prefix frontend run dev
+   ```
+   Open `http://localhost:3000`, sign up, and use the authenticated UI. The server-side frontend proxy stores the access token in an httpOnly cookie.
+5. To process research, writing, and scheduled outbox work, start one worker for the organization:
+   ```powershell
+   .\.venv\Scripts\Activate.ps1
+   python -m week4.worker --org-id <your-org-id>
+   ```
+   The signup response includes the organization ID. Existing migrated data is in organization 1. The worker uses PostgreSQL jobs; there is no Redis dependency.
+
+### Safety defaults and checks
+
+- Research is restricted to public business sites, respects `robots.txt`, caps downloads, and throttles per host. Use fake or public business information only; do not scrape personal data.
+- The current Google Gemini API model constant is `gemini-3.8-flash` (checked against Google's official model and pricing docs on 2026-11-02). Its free tier may use prompts and responses to improve Google products, and Google says human reviewers may process that content. Do not send real customer, personal, confidential, or sensitive data.
+- Gmail OAuth is optional and intended for a Google Cloud project in Testing mode with only your own account as a test user. Google marks the Gmail read scope as restricted; public production access requires review and may require a security assessment. Email remains dry-run by default, includes an unsubscribe link and postal address, checks permanent suppression, and limits each inbox to 30/day. Live delivery is blocked unless recipients match your own `ALLOWLIST`.
+- Stripe is test-mode only. Never put a live `sk_live_` key in this application.
+- Apply migrations only to a backed-up development database first. Postgres RLS is a second protection layer; the SQLite test suite validates application tenant filtering but cannot prove the live Postgres policies.
+
+### Verification commands
+
+```powershell
+python -m pytest -v
+npm --prefix frontend run typecheck
+npm --prefix frontend run build
+npm --prefix frontend audit
+python -m pip_audit
+python -m week4.evals.run
+python -m week4.evals.reply_eval
+```
+
+For the optional load test, also install `requirements-loadtest.txt`, start the API with fake data, and set `LOADTEST_TOKEN` to a JWT from a local fake account before running:
+```powershell
+python -m pip install -r requirements-loadtest.txt
+python -m locust -f week4\loadtest.py --headless --only-summary -u 20 -r 4 -t 30s --host http://127.0.0.1:8000
+```
+
+`python -m week4.seed_demo --org-id <your-org-id>` creates 30 idempotent fictional leads with `.example` sources. See [the demo script](./docs/demo-script.md), [beta invitation template](./docs/beta-outreach-template.md), and [security checklist](./SECURITY.md).
+
+For Docker, copy `.env.example` to `.env`, set the required local secrets and database URL, run `docker compose build`, apply the migration with `docker compose run --rm backend python -m alembic -c alembic.ini upgrade head`, then run `docker compose up`. Render's free web service is suitable only for a limited demo; the free service sleeps and its filesystem is ephemeral, and its free Postgres expires. See [DECISIONS.md](./DECISIONS.md) before choosing hosting.
+
+Before sharing changes, run `git status --short` and confirm `.env` and `.venv` are not listed. They are ignored and must never be committed.
+
+---
+
 AI-powered B2B sales outreach tool. Week 1 builds the core pieces: lists/dictionaries, JSON storage, HTTP APIs, and a free LLM for company summaries.
 
 ## What it does

@@ -1,77 +1,150 @@
-# week1/llm.py
-# The ONLY file in OutreachOS that talks to an AI provider.
-# If you switch from Gemini to another provider later, change only this file.
-# Free tiers only - never use a paid API key here.
+"""The only module that sends prompts to the configured AI provider."""
 
+import json
+import logging
 import os
+import random
+import re
 import time
-from dotenv import load_dotenv
+from typing import TypeVar
 
-# Load secrets from .env (GEMINI_API_KEY=your-key-here).
-# .env is already in .gitignore - never commit it.
+from dotenv import load_dotenv
+from pydantic import BaseModel, ValidationError
+from sqlalchemy import text
+
+from week2.db import get_engine
+
 load_dotenv()
 
-# TODO: Check Google AI Studio for the current free-tier model name.
-# Do not guess. Common free-tier models include "gemini-1.5-flash" and
-# "gemini-2.0-flash" but you should verify in the docs before using.
-MODEL = "gemini-1.5-flash"
+# Keep the model name in one constant and use only a key with no billing enabled.
+MODEL = "gemini-3.8-flash"
+logger = logging.getLogger("outreachos.llm")
+SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
-def ask_llm(prompt):
-    """
-    Sends a prompt to the AI provider and returns (text, input_tokens, output_tokens).
-    On HTTP 429 (rate limit), waits and retries up to 3 times with increasing delays.
-    """
+def _record_call(
+    org_id: int,
+    purpose: str,
+    input_tokens: int,
+    output_tokens: int,
+    latency_ms: int,
+    success: bool,
+) -> None:
+    with get_engine().begin() as connection:
+        if connection.dialect.name == "postgresql":
+            connection.execute(
+                text("SELECT set_config('app.current_org_id', :org_id, true)"),
+                {"org_id": str(org_id)},
+            )
+        connection.execute(
+            text(
+                "INSERT INTO llm_calls "
+                "(org_id, purpose, model, input_tokens, output_tokens, latency_ms, success) "
+                "VALUES (:org_id, :purpose, :model, :input_tokens, :output_tokens, "
+                ":latency_ms, :success)"
+            ),
+            {
+                "org_id": org_id,
+                "purpose": purpose[:60],
+                "model": MODEL,
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "latency_ms": latency_ms,
+                "success": success,
+            },
+        )
+
+
+def ask_llm(
+    prompt: str,
+    *,
+    org_id: int = 1,
+    purpose: str = "demo",
+    max_output_tokens: int = 2048,
+) -> tuple[str, int, int]:
+    """Call Gemini with bounded 429 retries and record every provider attempt."""
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("Error: GEMINI_API_KEY not found in .env file.")
-        return None, 0, 0
+    if not api_key or api_key == "fake-gemini-key":
+        raise RuntimeError("Set a real GEMINI_API_KEY in .env to use AI features.")
 
     from google import genai
+    from google.genai import types
+
     client = genai.Client(api_key=api_key)
-
-    delay = 2  # start with 2 seconds, then double each retry
     for attempt in range(3):
+        started = time.monotonic()
         try:
-            response = client.models.generate_content(model=MODEL, contents=prompt)
-
-            text = response.text
-
-            # Try to read token usage from the response. Attribute names may vary
-            # by SDK version - check the google-genai docs if these are 0.
-            input_tokens = 0
-            output_tokens = 0
-            if hasattr(response, "usage_metadata"):
-                input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0)
-                output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0)
-
-            return text, input_tokens, output_tokens
-
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=max_output_tokens,
+                ),
+            )
+            output = response.text
+            if not output:
+                raise RuntimeError("The AI provider returned an empty response.")
+            usage = getattr(response, "usage_metadata", None)
+            input_tokens = int(getattr(usage, "prompt_token_count", 0) or 0)
+            output_tokens = int(getattr(usage, "candidates_token_count", 0) or 0)
         except Exception as error:
-            error_text = str(error)
-
-            # HTTP 429 means rate limit - wait and retry with a longer delay.
-            if "429" in error_text and attempt < 2:
-                print(f"Rate limited. Waiting {delay}s before retry {attempt + 2}/3...")
-                time.sleep(delay)
-                delay *= 2  # 2s, then 4s
+            status_code = getattr(error, "status_code", None)
+            is_rate_limited = status_code == 429 or "429" in str(error)
+            _record_call(
+                org_id,
+                purpose,
+                0,
+                0,
+                int((time.monotonic() - started) * 1000),
+                False,
+            )
+            if is_rate_limited and attempt < 2:
+                time.sleep((2**attempt) + random.uniform(0, 0.25))
                 continue
+            logger.error("AI provider call failed (error type: %s)", type(error).__name__)
+            raise RuntimeError("The AI provider call failed; see server logs for the error type.") from error
+        _record_call(
+            org_id,
+            purpose,
+            input_tokens,
+            output_tokens,
+            int((time.monotonic() - started) * 1000),
+            True,
+        )
+        return output, input_tokens, output_tokens
+    raise RuntimeError("The AI provider call failed after retries.")
 
-            print(f"Sorry, the AI call failed: {error}")
-            return None, 0, 0
 
-    print("Sorry, the AI call failed after 3 retries.")
-    return None, 0, 0
-
-
-# OPTIONAL: Offline version using Ollama (runs models on your own computer).
-# Uncomment and adapt if you install Ollama and want to avoid the cloud API.
-#
-# def ask_llm_ollama(prompt):
-#     import requests
-#     response = requests.post(
-#         "http://localhost:11434/api/generate",
-#         json={"model": "llama3.2", "prompt": prompt, "stream": False},
-#     )
-#     return response.json()["response"], 0, 0
-print("llm.py loaded. MODEL =", MODEL)
+def request_validated(
+    prompt: str,
+    response_model: type[SchemaT],
+    *,
+    org_id: int,
+    purpose: str,
+    max_output_tokens: int = 2048,
+) -> tuple[SchemaT, int, int]:
+    """Parse model output into a Pydantic schema; retry invalid JSON once."""
+    validation_error: Exception | None = None
+    total_input = 0
+    total_output = 0
+    for attempt in range(2):
+        retry_note = ""
+        if validation_error is not None:
+            retry_note = (
+                "\nYour previous answer failed schema validation. Return only valid JSON "
+                "matching the requested schema."
+            )
+        raw, input_tokens, output_tokens = ask_llm(
+            prompt + retry_note,
+            org_id=org_id,
+            purpose=purpose,
+            max_output_tokens=max_output_tokens,
+        )
+        total_input += input_tokens
+        total_output += output_tokens
+        cleaned = re.sub(r"^\s*```(?:json)?\s*|\s*```\s*$", "", raw, flags=re.IGNORECASE)
+        try:
+            return response_model.model_validate(json.loads(cleaned)), total_input, total_output
+        except (json.JSONDecodeError, ValidationError, TypeError, ValueError) as error:
+            validation_error = error
+    raise ValueError(f"AI response did not match {response_model.__name__} after one retry.") from validation_error
